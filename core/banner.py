@@ -31,7 +31,7 @@ def show_banner():
     console.print(
         Panel(
             Align.center(Text(art, style=f"bold {color}")),
-            title=f"[bold {color}]{settings.get('name', 'RANA').upper()} OS[/]",
+            title=f"[bold {color}]{settings.get('name', 'ROS').upper()}[/]",
             subtitle=f"[{color}]PERSONAL TERMINAL ENVIRONMENT[/]",
             border_style=color,
             padding=(1, 2)
