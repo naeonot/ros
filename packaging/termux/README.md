@@ -6,7 +6,7 @@ This directory contains a **draft** Termux package recipe for review.
 - Intended install: `pkg install ros`
 - Runtime dependency: Python
 - Python runtime dependency: Rich 15.0.0, declared through Termux's Python runtime-dependency mechanism.
-- Source is pinned to commit `52cb360c2f4fcf15e5515761892266007d6ec148` for reproducibility.
+- Source is pinned to the `ros-v1.0.0` release branch for reproducibility.
 
 ## Status
 
