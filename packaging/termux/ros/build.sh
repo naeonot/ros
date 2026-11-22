@@ -4,6 +4,7 @@ TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="naeonot"
 TERMUX_PKG_VERSION=1.0.0
 TERMUX_PKG_SRCURL=git+https://github.com/naeonot/ros
+# Source pinned to the ros-v1.0.0 release branch
 TERMUX_PKG_GIT_BRANCH=ros-v1.0.0
 TERMUX_PKG_DEPENDS="python, python-pip"
 TERMUX_PKG_PYTHON_RUNTIME_DEPS="rich==15.0.0"
