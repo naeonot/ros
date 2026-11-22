@@ -1,0 +1,40 @@
+name: Build ROS Termux package
+
+on:
+  push:
+    branches:
+      - termux-package-prep
+    paths:
+      - "packaging/termux/ros/build.sh"
+      - ".github/workflows/termux-package.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out ROS
+        uses: actions/checkout@v4
+
+      - name: Check out Termux package build system
+        run: git clone --depth=1 https://github.com/termux/termux-packages.git
+
+      - name: Add ROS package recipe
+        run: |
+          mkdir -p termux-packages/packages/ros
+          cp packaging/termux/ros/build.sh termux-packages/packages/ros/build.sh
+
+      - name: Build ROS .deb package
+        working-directory: termux-packages
+        run: ./scripts/run-docker.sh ./build-package.sh -f -I ros
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ros-termux-deb
+          path: termux-packages/output/*.deb
+          if-no-files-found: error
+          retention-days: 14
