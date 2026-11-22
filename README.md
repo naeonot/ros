@@ -4,25 +4,51 @@ A lightweight terminal system dashboard for Termux.
 
 ## Install on Termux
 
+### Option 1: Download ZIP (no install URL command)
+
+1. Open the [RANA OS repository](https://github.com/naeonot/ros).
+2. Tap **Code → Download ZIP**.
+3. Extract `ros-main.zip` using your file manager.
+4. In Termux, install Python and allow storage access:
+
+   ```bash
+   pkg install python
+   termux-setup-storage
+   ```
+
+5. Run the installer from the extracted folder (usually named `ros-main`):
+
+   ```bash
+   cd ~/storage/downloads/ros-main && python install.py
+   ```
+
+6. Start RANA OS:
+
+   ```bash
+   ros
+   ```
+
+The installer installs the required `rich` library and sets up the `ros` command automatically. No Git installation is required.
+
+### Option 2: Install directly with one command
+
 First install Python:
 
 ```bash
 pkg install python
 ```
 
-Then install RANA OS with this single command:
+Then run:
 
 ```bash
 python -c "import urllib.request; exec(urllib.request.urlopen('https://raw.githubusercontent.com/naeonot/ros/main/install.py').read())"
 ```
 
-After installation, launch it with:
+Start RANA OS with:
 
 ```bash
 ros
 ```
-
-The installer downloads the app files and installs the required `rich` Python library automatically. No Git installation is required.
 
 ## Features
 
