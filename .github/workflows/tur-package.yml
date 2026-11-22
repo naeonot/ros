@@ -1,0 +1,44 @@
+name: Build ROS with TUR packaging system
+
+on:
+  push:
+    branches:
+      - tur-package-prep
+    paths:
+      - "packaging/tur/ros/build.sh"
+      - ".github/workflows/tur-package.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Check out ROS
+        uses: actions/checkout@v4
+
+      - name: Check out TUR
+        run: git clone --depth=1 https://github.com/termux-user-repository/tur.git tur-env
+
+      - name: Add ROS recipe to TUR build tree
+        run: |
+          mkdir -p tur-env/tur/ros
+          cp packaging/tur/ros/build.sh tur-env/tur/ros/build.sh
+
+      - name: Set up TUR build environment
+        working-directory: tur-env
+        run: ./setup-environment.sh
+
+      - name: Build ROS for aarch64
+        working-directory: tur-env
+        run: ./scripts/run-docker.sh -d ./build-package.sh -I -C -a aarch64 ros
+
+      - name: Upload test package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ros-tur-aarch64-deb
+          path: tur-env/output/*.deb
+          if-no-files-found: error
+          retention-days: 14
