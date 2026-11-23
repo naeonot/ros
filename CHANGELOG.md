@@ -4,6 +4,8 @@ Notable changes to ROS are documented here.
 
 ## Unreleased
 
+- Move local application and configuration paths to `ran-os`, with migration from earlier `rana-os` paths.
+
 - Ask for an optional device-local ASCII-art logo name after installation.
 
 - Add confirmed `ros uninstall` and `ros uninstall --keep-data` commands.
