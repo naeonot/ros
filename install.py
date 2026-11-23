@@ -55,33 +55,9 @@ def configure_updates():
     CONFIG_DIR.chmod(0o700)
 
 
-def personalize_logo():
-    """Ask for a local ASCII-art logo name after installation."""
-    if not sys.stdin.isatty():
-        print("Interactive logo setup skipped (no terminal input).")
-        return
-
-    print("\nPERSONALIZE YOUR ROS LOGO")
-    print("Enter a name to turn it into your local ASCII-art logo.")
-    print("Leave it blank to keep the default RAN-OS logo.")
-
-    try:
-        name = input("Logo name (up to 12 characters): ").strip()
-    except (EOFError, KeyboardInterrupt):
-        print("\nLogo personalization skipped.")
-        return
-
-    if not name:
-        print("Default RAN-OS logo kept.")
-        return
-    if len(name) > 12:
-        print("Name is too long (maximum 12 characters). Default logo kept.")
-        return
-    if not all(ch.isalnum() or ch.isspace() or ch in "-_." for ch in name):
-        print("Use letters, numbers, spaces, hyphens, underscores or periods only.")
-        print("Default logo kept.")
-        return
-
+def save_install_logo(name):
+    """Persist the install-time logo separately from later manual overrides."""
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     try:
         config = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
         if not isinstance(config, dict):
@@ -89,7 +65,7 @@ def personalize_logo():
     except FileNotFoundError:
         config = {}
 
-    config["main_logo"] = name.upper()
+    config["install_logo"] = name.upper()
     temporary = CONFIG_FILE.with_suffix(".json.tmp")
     temporary.write_text(
         json.dumps(config, indent=2, ensure_ascii=False) + "\n",
@@ -98,7 +74,37 @@ def personalize_logo():
     temporary.chmod(0o600)
     temporary.replace(CONFIG_FILE)
     CONFIG_DIR.chmod(0o700)
-    print(f"Personal ASCII-art logo saved locally: {name.upper()}")
+
+
+def personalize_logo():
+    """Choose the local installation's baseline ASCII-art logo."""
+    default_logo = "RAN-OS"
+    print("\nPERSONALIZE YOUR ROS LOGO")
+    print("Enter a name to turn it into your local ASCII-art logo.")
+    print(f"Leave it blank to use the default {default_logo} logo.")
+
+    if not sys.stdin.isatty():
+        save_install_logo(default_logo)
+        print(f"Default {default_logo} logo saved locally (non-interactive install).")
+        return
+
+    try:
+        name = input("Logo name (up to 12 characters): ").strip()
+    except (EOFError, KeyboardInterrupt):
+        name = ""
+        print("\nInput skipped; using the default logo.")
+
+    if not name:
+        name = default_logo
+    elif len(name) > 12:
+        print(f"Name is too long (maximum 12 characters). Using {default_logo}.")
+        name = default_logo
+    elif not all(ch.isalnum() or ch.isspace() or ch in "-_." for ch in name):
+        print(f"Unsupported characters. Using {default_logo}.")
+        name = default_logo
+
+    save_install_logo(name)
+    print(f"Installation ASCII-art logo saved locally: {name.upper()}")
 
 
 def migrate_legacy_paths():
@@ -126,6 +132,54 @@ def migrate_legacy_paths():
                 legacy.rmdir()
             except OSError:
                 print(f"Note: some older files remain in {legacy}")
+
+
+def configure_shell_startup():
+    """Show the ROS logo and system dashboard in each interactive Termux shell."""
+    bashrc = Path.home() / ".bashrc"
+    hushlogin = Path.home() / ".hushlogin"
+    marker = "# >>> RAN-OS STARTUP >>>"
+    end_marker = "# <<< RAN-OS STARTUP <<<"
+
+    try:
+        content = bashrc.read_text(encoding="utf-8") if bashrc.exists() else ""
+    except OSError as exc:
+        print(f"Could not configure shell startup: {exc}")
+        return
+
+    # Replace a previous ROS-managed block without touching unrelated shell settings.
+    content = re.sub(
+        r"(?ms)^# >>> RAN-OS STARTUP >>>\n.*?^# <<< RAN-OS STARTUP <<<\n?",
+        "",
+        content,
+    )
+    # Remove the temporary unmarked startup snippets used during local testing.
+    content = re.sub(
+        r"(?ms)^# RAN-OS startup (?:display only; preserve the ordinary Termux shell|panel; then return to the normal home prompt)\ncase \$- in\n.*?^esac\n?",
+        "",
+        content,
+    )
+    block = (
+        marker + "\n"
+        + 'case $- in\n'
+        + '    *i*)\n'
+        + '        clear 2>/dev/null || true\n'
+        + '        (cd "$HOME/ran-os" && python "$HOME/ran-os/main.py" --append) || true\n'
+        + '        ;;\n'
+        + 'esac\n'
+        + end_marker + "\n"
+    )
+    content = content.rstrip() + ("\n\n" if content.strip() else "") + block
+    temporary = bashrc.with_suffix(".bashrc.ros-tmp")
+    temporary.write_text(content, encoding="utf-8")
+    temporary.replace(bashrc)
+
+    if not hushlogin.exists():
+        hushlogin.touch()
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        (CONFIG_DIR / "created-hushlogin").write_text("1\n", encoding="utf-8")
+
+    print("Termux startup configured: ROS logo and system dashboard, normal shell preserved.")
 
 
 def main():
@@ -163,6 +217,7 @@ def main():
     launcher.chmod(0o755)
 
     configure_updates()
+    configure_shell_startup()
     print("ROS installed successfully.")
     personalize_logo()
     print("Run: ros")
@@ -171,3 +226,5 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+[executed on device: localhost (34059f63-7af7-4f50-89c5-e6d1ecbd6567)]
