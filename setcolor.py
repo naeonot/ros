@@ -3,7 +3,7 @@ import re
 import sys
 from pathlib import Path
 
-config = Path.home() / ".config/rana-os/config.json"
+config = Path.home() / ".config/ran-os/config.json"
 
 if len(sys.argv) != 2 or not re.fullmatch(r"#?[0-9a-fA-F]{6}", sys.argv[1]):
     print("Usage: python setcolor.py HEX  (example: #ff00aa)")
