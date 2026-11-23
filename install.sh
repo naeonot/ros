@@ -33,7 +33,7 @@ fi
 
 ARCHIVE_URL="https://api.github.com/repos/${REPO}/zipball/${ROS_INSTALL_COMMIT}"
 echo "Downloading ROS commit ${ROS_INSTALL_COMMIT:0:7}..."
-curl -fL --retry 3 --connect-timeout 20 "$ARCHIVE_URL" -o "$WORK/ros.zip"
+curl -fL --retry 3 --connect-timeout 20 --max-filesize 52428800 "$ARCHIVE_URL" -o "$WORK/ros.zip"
 
 echo "Extracting and validating package..."
 python - "$WORK/ros.zip" "$WORK/source" <<'PY'
