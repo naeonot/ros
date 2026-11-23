@@ -11,6 +11,7 @@ import urllib.parse
 import zipfile
 import tempfile
 import os
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -24,6 +25,42 @@ COLORS = [
     ("White", "#ffffff"), ("Purple", "#bb66ff"), ("Orange", "#ff8800"),
     ("Pink", "#ff77bb"), ("Green", "#22cc88"), ("Sky Blue", "#55ccff"),
 ]
+
+def remove_shell_startup():
+    """Remove only the ROS startup hook and a hushlogin file ROS created."""
+    home = Path.home()
+    bashrc = home / ".bashrc"
+    config_dir = home / ".config" / "ran-os"
+    marker = "# >>> RAN-OS STARTUP >>>"
+    end_marker = "# <<< RAN-OS STARTUP <<<"
+
+    try:
+        if bashrc.exists():
+            content = bashrc.read_text(encoding="utf-8")
+            content = re.sub(
+                r"(?ms)^# >>> RAN-OS STARTUP >>>\n.*?^# <<< RAN-OS STARTUP <<<\n?",
+                "",
+                content,
+            )
+            # Also clean the temporary unmarked hook from pre-release local testing.
+            content = re.sub(
+                r"(?ms)^# RAN-OS startup display only; preserve the ordinary Termux shell\ncase \$- in\n.*?^esac\n?",
+                "",
+                content,
+            )
+            content = re.sub(
+                r"(?ms)^# RANA OS startup panel; then return to the normal home prompt\ncase \$- in\n.*?^esac\n?",
+                "",
+                content,
+            )
+            bashrc.write_text(content.lstrip("\n"), encoding="utf-8")
+
+        hushlogin_marker = config_dir / "created-hushlogin"
+        if hushlogin_marker.exists():
+            (home / ".hushlogin").unlink(missing_ok=True)
+    except OSError as exc:
+        print(f"Warning: could not fully remove ROS shell startup settings: {exc}")
+
 
 def run_uninstall(raw_args=None):
     """Remove ROS itself, optionally retaining user configuration and data."""
@@ -70,6 +107,8 @@ def run_uninstall(raw_args=None):
     if answer not in ("y", "yes"):
         print("Uninstall cancelled. Nothing was removed.")
         return 1
+
+    remove_shell_startup()
 
     def remove_path(path):
         # Never follow a symlink while deleting a ROS-managed path.
@@ -646,7 +685,7 @@ def run_main_settings(raw_args=None):
     group.add_argument("--logo", metavar="WORDS", help="set the large ASCII-art logo text")
     group.add_argument("--reset-name", action="store_true", help="restore the default title: ROS")
     group.add_argument("--reset-text", action="store_true", help="restore the default subtitle")
-    group.add_argument("--reset-logo", action="store_true", help="restore the original RANA ASCII-art logo")
+    group.add_argument("--reset-logo", action="store_true", help="restore the installation logo")
     group.add_argument("--reset", action="store_true", help="restore title, subtitle and logo defaults")
     parser.add_argument("legacy", nargs="*", help=argparse.SUPPRESS)
     parsed = parser.parse_args(list(raw_args or []))
@@ -683,7 +722,7 @@ def run_main_settings(raw_args=None):
         message = "Main subtitle restored to default."
     elif parsed.reset_logo:
         data.pop("main_logo", None)
-        message = "Original RANA ASCII-art logo restored."
+        message = f"Installation logo restored: {data.get('install_logo', 'RAN-OS')}"
     elif parsed.reset:
         data.pop("main_name", None)
         data.pop("main_text", None)
@@ -697,7 +736,7 @@ def run_main_settings(raw_args=None):
         if key in ("logo", "title", "subtitle") and value.lower() in ("reset", "def", "default"):
             if key == "logo":
                 data.pop("main_logo", None)
-                message = "Original RANA ASCII-art logo restored."
+                message = f"Installation logo restored: {data.get('install_logo', 'RAN-OS')}"
                 logo_changed = True
             elif key == "title":
                 data.pop("main_name", None)
@@ -726,7 +765,7 @@ def run_main_settings(raw_args=None):
         elif key == "logo" and value:
             if value.lower() in ("def", "default"):
                 data.pop("main_logo", None)
-                message = "Original RANA ASCII-art logo restored."
+                message = f"Installation logo restored: {data.get('install_logo', 'RAN-OS')}"
             else:
                 if len(value) > 12:
                     parser.error("logo text must be 12 characters or fewer to fit the terminal")
@@ -735,7 +774,7 @@ def run_main_settings(raw_args=None):
             logo_changed = True
         elif key == "reset" and value.lower() == "logo":
             data.pop("main_logo", None)
-            message = "Original RANA ASCII-art logo restored."
+            message = f"Installation logo restored: {data.get('install_logo', 'RAN-OS')}"
             logo_changed = True
         elif key == "name" and value.lower() in ("def", "default"):
             data.pop("main_name", None)
@@ -755,7 +794,7 @@ def run_main_settings(raw_args=None):
         print("ROS MAIN SETTINGS")
         print(f"  Current title    : {data.get('main_name', 'ROS')}")
         print(f"  Current subtitle : {data.get('main_text', 'PERSONAL TERMINAL ENVIRONMENT')}")
-        print(f"  Current logo     : {data.get('main_logo', 'Original RANA logo')}")
+        print(f"  Current logo     : {data.get('main_logo', data.get('install_logo', 'RAN-OS'))}")
         print("\nRun 'ros main --help' for available options.")
         return
 
@@ -928,3 +967,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+[executed on device: localhost (34059f63-7af7-4f50-89c5-e6d1ecbd6567)]
