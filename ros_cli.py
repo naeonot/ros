@@ -82,6 +82,7 @@ def _latest_update(owner, repo, branch):
     url = (
         f"https://api.github.com/repos/{urllib.parse.quote(owner, safe='')}/"
         f"{urllib.parse.quote(repo, safe='')}/commits/{urllib.parse.quote(branch, safe='')}"
+        f"?nocache={int(datetime.now().timestamp())}"
     )
     payload = _github_json(url)
     sha = payload.get("sha")
