@@ -13,7 +13,7 @@ from rich.table import Table
 
 console = Console()
 ROOT = Path(__file__).resolve().parent.parent
-CONFIG = Path.home() / ".config/rana-os/config.json"
+CONFIG = Path.home() / ".config/ran-os/config.json"
 
 REQUIRED_FILES = (
     "ros_cli.py",
@@ -91,7 +91,7 @@ def run(args=None):
     add("PASS" if ffmpeg else "WARN", "Dependency: ffmpeg",
         ffmpeg if ffmpeg else "Not found; media conversion/merging may be unavailable")
 
-    oracle_config = Path.home() / ".config/rana-os/oracle.json"
+    oracle_config = Path.home() / ".config/ran-os/oracle.json"
     if oracle_config.exists():
         try:
             oracle_data = json.loads(oracle_config.read_text(encoding="utf-8"))
