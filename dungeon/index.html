@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#10131c">
+<title>ROS Dungeon</title>
+<style>
+:root{color-scheme:dark;--bg:#0c1018;--panel:#151c29;--line:#29354a;--cyan:#67e8f9;--gold:#f5c96a;--muted:#9aa9bd;--red:#fb7185}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1b2940 0,#0c1018 55%);color:#edf5ff;font:15px system-ui,sans-serif;min-height:100vh;padding:16px;display:flex;justify-content:center}
+.app{width:min(100%,720px);display:flex;flex-direction:column;gap:12px}.top{display:flex;align-items:center;justify-content:space-between;gap:10px}.brand{font-weight:900;letter-spacing:.18em;color:var(--cyan);font-size:19px}.sub{color:var(--muted);font-size:11px;letter-spacing:.12em}.pill{border:1px solid var(--line);border-radius:99px;padding:7px 11px;color:var(--gold);font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stat,.stage,.log,.controls{background:linear-gradient(145deg,#182232,#111722);border:1px solid var(--line);border-radius:14px;padding:10px}.stat small{display:block;color:var(--muted);font-size:10px;letter-spacing:.12em}.stat strong{font-size:17px}.hpbar{height:5px;background:#303b4c;border-radius:5px;margin-top:6px;overflow:hidden}.hpbar i{display:block;height:100%;background:linear-gradient(90deg,#fb7185,#fda4af);width:100%;transition:width .2s}
+.stage{padding:9px;position:relative}.canvaswrap{width:100%;display:flex;justify-content:center}canvas{display:block;width:100%;max-width:620px;height:auto;image-rendering:pixelated;border-radius:9px;background:#090d14;touch-action:manipulation}
+.message{color:var(--muted);font-size:13px;min-height:20px;padding:2px 4px}.log{font-size:12px;color:#c2cede;min-height:42px;line-height:1.5}.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:220px;margin:auto}.pad button,.actions button,.restart{border:1px solid #34445c;background:#202d40;color:#e7f4ff;border-radius:10px;padding:12px;font-weight:700;font-size:17px;min-height:45px;touch-action:manipulation}.pad button:active,.actions button:active{background:#31516b;transform:scale(.97)}.pad .empty{visibility:hidden}.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;align-content:center}.actions button{font-size:12px;padding:10px}.actions .primary{border-color:#3b8292;color:var(--cyan)}.actions .danger{border-color:#87404d;color:#ff9cab}.hint{text-align:center;color:#75869d;font-size:11px}.overlay{position:absolute;inset:9px;background:#080d15eF;border-radius:9px;display:none;align-items:center;justify-content:center;text-align:center;padding:24px}.overlay.show{display:flex}.modal h2{color:var(--gold);letter-spacing:.12em}.modal p{color:#b9c7d8}.restart{font-size:13px;color:var(--cyan)}
+@media(max-width:420px){body{padding:10px}.stat{padding:8px}.stat strong{font-size:15px}.controls{gap:8px}.pad button{min-height:42px;padding:8px}.actions button{padding:8px}}
+</style>
+</head>
+<body>
+<div class="app">
+ <header class="top"><div><div class="brand">ROS // DUNGEON</div><div class="sub">A SMALL ADVENTURE BELOW THE SURFACE</div></div><div class="pill" id="floorTag">FLOOR 01</div></header>
+ <section class="stats">
+  <div class="stat"><small>HEALTH</small><strong id="hp">20 / 20</strong><div class="hpbar"><i id="hpbar"></i></div></div>
+  <div class="stat"><small>ATTACK</small><strong id="atk">4</strong></div>
+  <div class="stat"><small>COINS</small><strong id="coins">0</strong></div>
+  <div class="stat"><small>ELIMS</small><strong id="kills">0</strong></div>
+ </section>
+ <section class="stage"><div class="canvaswrap"><canvas id="game" width="600" height="440" aria-label="Dungeon game board"></canvas></div><div class="overlay" id="overlay"><div class="modal"><h2 id="overTitle">YOU FELL</h2><p id="overText">The dungeon keeps its secrets.</p><button class="restart" id="again">ENTER AGAIN</button></div></div></section>
+ <div class="message" id="message">Explore the dungeon. Find the stairs (◆) to descend.</div>
+ <section class="controls">
+  <div class="pad" aria-label="Movement controls">
+   <span class="empty"></span><button data-move="0,-1">▲</button><span class="empty"></span>
+   <button data-move="-1,0">◀</button><button data-move="0,1">▼</button><button data-move="1,0">▶</button>
+  </div>
+  <div class="actions"><button class="primary" id="wait">WAIT / REST</button><button id="potion">USE POTION</button><button id="mapbtn">MAP LEGEND</button><button class="danger" id="restart">RESTART RUN</button></div>
+ </section>
+ <div class="log" id="log">You enter the dungeon. Stay alert.</div>
+ <div class="hint">Touch the arrows or use keyboard WASD / arrow keys · Step onto enemies to attack</div>
+</div>
+<script>
+(()=>{
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const W=15,H=11,T=40;
+const $=id=>document.getElementById(id);
+let state;
+const rand=n=>Math.floor(Math.random()*n);
+const pick=a=>a[rand(a.length)];
+function fresh(){
+ state={floor:1,hp:20,maxHp:20,atk:4,coins:0,kills:0,potions:2,x:1,y:1,map:[],enemies:[],items:[],stairs:{x:13,y:9},over:false,turn:0};
+ makeFloor(); update(); say("You enter the dungeon. Find the stairs (◆) to descend.");
+}
+function makeFloor(){
+ state.map=Array.from({length:H},(_,y)=>Array.from({length:W},(_,x)=>(x===0||y===0||x===W-1||y===H-1)?1:0));
+ // Scattered wall clusters; keep a clear route around the outer interior lanes.
+ for(let n=0;n<22;n++){let x=2+rand(W-4),y=2+rand(H-4);if((x===state.x&&y===state.y)||(x===13&&y===9))continue;state.map[y][x]=1;}
+ state.map[1][1]=0;state.map[9][13]=0;
+ state.enemies=[];state.items=[];
+ const spots=[];
+ for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)if(!state.map[y][x]&&!(x===1&&y===1)&&!(x===13&&y===9))spots.push({x,y});
+ const used=new Set();
+ const take=()=>{let p;do{p=pick(spots)}while(used.has(p.x+","+p.y));used.add(p.x+","+p.y);return p};
+ for(let i=0;i<Math.min(3+state.floor,8);i++){let p=take();state.enemies.push({...p,hp:state.floor>2?9:6,max:state.floor>2?9:6,atk:2+Math.floor(state.floor/2),kind:pick(["goblin","slime","skeleton"])})}
+ for(let i=0;i<4;i++){let p=take();state.items.push({...p,type:pick(["coin","coin","potion","chest"])})}
+ state.stairs={x:13,y:9};draw();
+}
+function say(s){$('message').textContent=s}
+function log(s){$('log').textContent=s}
+function update(){
+ $('hp').textContent=state.hp+" / "+state.maxHp;$('hpbar').style.width=(100*state.hp/state.maxHp)+"%";
+ $('atk').textContent=state.atk;$('coins').textContent=state.coins;$('kills').textContent=state.kills;
+ $('floorTag').textContent="FLOOR "+String(state.floor).padStart(2,"0");$('potion').textContent="POTION × "+state.potions;
+ draw();
+}
+function tile(x,y){return state.map[y]?.[x]??1}
+function draw(){
+ ctx.clearRect(0,0,600,440);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+  let wall=tile(x,y)===1;
+  ctx.fillStyle=wall?"#273447":"#111a25";ctx.fillRect(x*T,y*T,T,T);
+  ctx.strokeStyle=wall?"#34465c":"#1d2a39";ctx.strokeRect(x*T+.5,y*T+.5,T-1,T-1);
+  if(wall){ctx.fillStyle="#34465c";ctx.fillRect(x*T+5,y*T+6,30,4);ctx.fillRect(x*T+10,y*T+22,24,4)}
+ }
+ // Stairs
+ drawGlyph("◆",state.stairs.x,state.stairs.y,"#f5c96a",22);
+ for(const it of state.items){let g=it.type==="coin"?"●":it.type==="potion"?"♥":"▣";drawGlyph(g,it.x,it.y,it.type==="coin"?"#f5c96a":it.type==="potion"?"#fb7185":"#c4a7ff",22)}
+ for(const e of state.enemies){drawGlyph(e.kind==="goblin"?"♟":e.kind==="slime"?"●":"☠",e.x,e.y,e.kind==="slime"?"#72e0b1":"#fb8797",25);ctx.fillStyle="#080d14";ctx.fillRect(e.x*T+5,e.y*T+34,30,3);ctx.fillStyle="#fb7185";ctx.fillRect(e.x*T+5,e.y*T+34,30*e.hp/e.max,3)}
+ drawGlyph("◆",state.x,state.y,"#67e8f9",25);
+}
+function drawGlyph(g,x,y,color,size){ctx.fillStyle=color;ctx.font="bold "+size+"px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(g,x*T+T/2,y*T+T/2+1)}
+function enemyAt(x,y){return state.enemies.find(e=>e.x===x&&e.y===y)}
+function itemAt(x,y){return state.items.find(e=>e.x===x&&e.y===y)}
+function move(dx,dy){
+ if(state.over)return;
+ let nx=state.x+dx,ny=state.y+dy;if(tile(nx,ny))return;
+ let enemy=enemyAt(nx,ny);
+ if(enemy){enemy.hp-=state.atk;log("You hit the "+enemy.kind+" for "+state.atk+" damage.");if(enemy.hp<=0){state.enemies=state.enemies.filter(e=>e!==enemy);state.kills++;state.coins+=2+rand(4);say("Enemy defeated. It dropped a few coins.");}else{say("The "+enemy.kind+" has "+enemy.hp+" HP left.");}enemyTurn();update();return;}
+ state.x=nx;state.y=ny;
+ let item=itemAt(nx,ny);
+ if(item){state.items=state.items.filter(i=>i!==item);if(item.type==="coin"){let c=3+rand(6);state.coins+=c;log("You found "+c+" coins.");}if(item.type==="potion"){state.potions++;log("Potion collected. Use it when hurt.");}if(item.type==="chest"){let reward=pick(["atk","heal","coins"]);if(reward==="atk"){state.atk++;log("Treasure! Your attack increased.");}else if(reward==="heal"){state.hp=Math.min(state.maxHp,state.hp+8);log("Treasure! You recovered 8 HP.");}else{state.coins+=12;log("Treasure! +12 coins.");}}}
+ if(nx===state.stairs.x&&ny===state.stairs.y){state.floor++;state.hp=Math.min(state.maxHp,state.hp+3);state.x=1;state.y=1;makeFloor();say("Floor "+state.floor+"! You recover 3 HP.");log("A deeper floor. The monsters grow stronger.");update();return;}
+ enemyTurn();update();
+}
+function enemyTurn(){
+ for(const e of [...state.enemies]){
+  let dx=Math.sign(state.x-e.x),dy=Math.sign(state.y-e.y);
+  if(Math.abs(state.x-e.x)+Math.abs(state.y-e.y)===1){state.hp-=e.atk;log("The "+e.kind+" hits you for "+e.atk+".");continue;}
+  let opts=[[dx,0],[0,dy],...[[1,0],[-1,0],[0,1],[0,-1]]].filter(a=>a[0]||a[1]);
+  for(const [mx,my] of opts){let x=e.x+mx,y=e.y+my;if(!tile(x,y)&&!enemyAt(x,y)&&!(x===state.x&&y===state.y)){e.x=x;e.y=y;break}}
+ }
+ if(state.hp<=0){state.hp=0;state.over=true;$('overTitle').textContent="YOU FELL";$('overText').textContent="Floor "+state.floor+" · "+state.kills+" enemies defeated · "+state.coins+" coins";$('overlay').classList.add("show");}
+}
+function usePotion(){if(state.over)return;if(!state.potions){say("No potions left.");return;}if(state.hp===state.maxHp){say("Your health is already full.");return;}state.potions--;let n=Math.min(10,state.maxHp-state.hp);state.hp+=n;log("Potion restored "+n+" HP.");enemyTurn();update()}
+function waitTurn(){if(state.over)return;state.hp=Math.min(state.maxHp,state.hp+1);say("You catch your breath (+1 HP).");enemyTurn();update()}
+document.querySelectorAll("[data-move]").forEach(b=>b.addEventListener("click",()=>move(...b.dataset.move.split(",").map(Number))));
+$('wait').onclick=waitTurn;$('potion').onclick=usePotion;$('again').onclick=fresh;$('restart').onclick=()=>{if(confirm("Start a new run? Current progress will be lost."))fresh()};
+$('mapbtn').onclick=()=>{log("Legend: cyan ◆ you · gold ◆ stairs · pink ☠ monsters · gold ● coins · purple ▣ treasure · pink ♥ potion.");};
+window.addEventListener("keydown",e=>{let m={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]}[e.key];if(m){e.preventDefault();move(...m)}else if(e.key===" "){e.preventDefault();waitTurn()}});
+fresh();
+})();
+</script>
+</body>
+</html>

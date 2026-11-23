@@ -23,4 +23,4 @@ data["name"] = name
 config.parent.mkdir(parents=True, exist_ok=True)
 config.write_text(json.dumps(data))
 
-print(f"RANA OS name changed to: {name}")
+print(f"RAN OS name changed to: {name}")

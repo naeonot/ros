@@ -1,73 +1,57 @@
-# RANA OS
+# ROS — RAN Operating System
 
-A lightweight terminal system dashboard for Termux.
+A modular personal terminal environment for Termux on Android, written in Python.
 
-## Install on Termux
+## Install
 
-### Option 1: Download ZIP (no install URL command)
+    pkg update && pkg upgrade
+    pkg install python git
+    git clone https://github.com/naeonot/ros.git
+    cd ros
+    python install.py
 
-1. Open the [RANA OS repository](https://github.com/naeonot/ros).
-2. Tap **Code → Download ZIP**.
-3. Extract `ros-main.zip` using your file manager.
-4. In Termux, install Python and allow storage access:
+Then launch with: ros
 
-   ```bash
-   pkg install python
-   termux-setup-storage
-   ```
+The installer places the application in ~/rana-os and creates the ros command in Termux. Personal settings and API keys remain in ~/.config/rana-os/ and are not part of this repository.
 
-5. Run the installer from the extracted folder (usually named `ros-main`):
+## Main commands
 
-   ```bash
-   cd ~/storage/downloads/ros-main && python install.py
-   ```
+- ros — Main ROS dashboard
+- ros core — Central menu for core systems
+- ros oracle — ORACLE AI assistant
+- ros nexus — NEXUS command center
+- ros desk — Tasks, focus timer, notes and habits
+- ros watch — Device telemetry
+- ros download — Media and file downloader
+- ros lab — Cyber Lab utilities
+- ros config — Local configuration manager
+- ros doctor — Installation health checks
+- ros update — Check GitHub for ROS updates
+- ros update download — Download an update package
+- ros update install — Install a downloaded update after confirmation
 
-6. Start RANA OS:
+## Updating ROS
 
-   ```bash
-   ros
-   ```
+pkg upgrade updates Termux packages. It does not update ROS project files.
 
-The installer installs the required `rich` library and sets up the `ros` command automatically. No Git installation is required.
+Use the ROS updater separately:
 
-### Option 2: Install directly with one command
+    ros update
+    ros update download
+    ros update install
 
-First install Python:
+The updater keeps a timestamped backup of replaced project files. Personal configuration remains outside the project directory.
 
-```bash
-pkg install python
-```
+## Dependencies
 
-Then run:
+See requirements.txt. ROS uses Python's standard library and Rich; some optional modules use Termux utilities such as termux-battery-status and ffmpeg.
 
-```bash
-python -c "import urllib.request; exec(urllib.request.urlopen('https://raw.githubusercontent.com/naeonot/ros/main/install.py').read())"
-```
+## Security and privacy
 
-Start RANA OS with:
-
-```bash
-ros
-```
-
-## Features
-
-- Custom RANA banner
-- Android and Termux system information
-- Configurable banner name and HEX theme colour
-- Built with Python and Rich
-
-## Customization
-
-From the project source folder, run:
-
-```bash
-python setname.py YOURNAME
-python setcolor.py 00ffff
-```
-
-Configuration is stored in `~/.config/rana-os/config.json`.
+- ORACLE credentials are stored locally in the user's private Termux config directory, not in this repository.
+- Downloader safety checks are best-effort and are not a malware scanner.
+- NEXUS signal scan visuals are simulations, not actual network scans.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT — see LICENSE.

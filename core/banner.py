@@ -18,22 +18,39 @@ def get_settings():
 def show_banner():
     settings = get_settings()
     color = settings.get("color", "#00ffff")
+    display_name = settings.get("main_name", "ROS")
+    display_text = settings.get("main_text", "PERSONAL TERMINAL ENVIRONMENT")
+    width = console.size.width
 
     art = r"""
     ██████╗  █████╗ ███╗   ██╗ █████╗
     ██╔══██╗██╔══██╗████╗  ██║██╔══██╗
     ██████╔╝███████║██╔██╗ ██║███████║
-    ██╔══██╗██╔══██║██║╚██╗██║██╔══██╗
+    ██╔══██║██╔══██║██║╚██╗██║██╔══██║
     ██║  ██║██║  ██║██║ ╚████║██║  ██║
     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
     """
 
+    custom_logo = settings.get("main_logo")
+    if custom_logo:
+        try:
+            from pyfiglet import Figlet
+            art = "\n" + Figlet(font="ansi_shadow", width=120).renderText(custom_logo).rstrip("\n")
+        except ImportError:
+            art = custom_logo.upper()
+
+    if width < 54:
+        content = Align.center(Text(display_name, style=f"bold {color}"))
+    else:
+        content = Align.center(Text(art, style=f"bold {color}"))
+
     console.print(
         Panel(
-            Align.center(Text(art, style=f"bold {color}")),
-            title=f"[bold {color}]{'ROS' if settings.get('name', 'ROS').upper() == 'RANA' else settings.get('name', 'ROS').upper()}[/]",
-            subtitle=f"[{color}]PERSONAL TERMINAL ENVIRONMENT[/]",
+            content,
+            title=f"[bold {color}]{display_name}[/]",
+            subtitle=f"[{color}]{display_text}[/]",
             border_style=color,
-            padding=(1, 2)
+            padding=(0, 1 if width < 54 else 2),
+            expand=True
         )
     )

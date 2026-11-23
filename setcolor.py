@@ -23,4 +23,4 @@ data["color"] = color
 config.parent.mkdir(parents=True, exist_ok=True)
 config.write_text(json.dumps(data))
 
-print(f"RANA OS theme colour set to {color}")
+print(f"RAN OS theme colour set to {color}")

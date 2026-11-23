@@ -1,50 +1,42 @@
-#!/usr/bin/env python
-"""Install RANA OS directly from GitHub on Termux."""
+#!/usr/bin/env python3
+"""Install the complete ROS project into ~/rana-os on Termux."""
 import os
-import sys
+import shutil
 import subprocess
-import urllib.request
+import sys
+import json
 from pathlib import Path
 
-BASE = "https://raw.githubusercontent.com/naeonot/ros/main/"
-FILES = (
-    "main.py",
-    "setname.py",
-    "setcolor.py",
-    "core/__init__.py",
-    "core/banner.py",
-    "core/system.py",
-)
-HOME = Path.home()
-APP = HOME / ".local" / "share" / "rana-os"
-PREFIX = Path(os.environ.get("PREFIX", str(HOME / ".local")))
+SOURCE = Path(__file__).resolve().parent
+APP = Path.home() / "rana-os"
+PREFIX = Path(os.environ.get("PREFIX", "/data/data/com.termux/files/usr"))
 BIN = PREFIX / "bin"
 
-def download(path):
-    with urllib.request.urlopen(BASE + path, timeout=30) as response:
-        return response.read()
-
 def main():
-    print("Installing RANA OS...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "rich"])
-    for relative in FILES:
-        destination = APP / relative
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_bytes(download(relative))
-
+    if "com.termux" not in str(PREFIX):
+        print("This installer is designed for Termux.")
+        return 1
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", str(SOURCE / "requirements.txt")])
+    APP.mkdir(parents=True, exist_ok=True)
+    files = json.loads((SOURCE / "ros_manifest.json").read_text(encoding="utf-8"))["files"]
+    for name in files:
+        source = (SOURCE / name).resolve()
+        if SOURCE.resolve() not in source.parents or not source.is_file():
+            raise RuntimeError("Unsafe or missing project file: " + name)
+        target = APP / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
     BIN.mkdir(parents=True, exist_ok=True)
     launcher = BIN / "ros"
-    main_py = APP / "main.py"
     launcher.write_text(
-        "#!/data/data/com.termux/files/usr/bin/sh\n"
-        f'exec "{sys.executable}" "{main_py}" "$@"\n'
+        "#!/data/data/com.termux/files/usr/bin/bash\n"
+        + 'exec "' + sys.executable + '" "' + str(APP / "ros_cli.py") + '" "$@"\n',
+        encoding="utf-8",
     )
     launcher.chmod(0o755)
-
-    print("RANA OS installed successfully.")
+    print("ROS installed successfully.")
     print("Run: ros")
-    if str(BIN) not in os.environ.get("PATH", "").split(os.pathsep):
-        print(f'Add this to PATH if "ros" is not found: export PATH="{BIN}:$PATH"')
+    return 0
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

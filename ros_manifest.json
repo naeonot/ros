@@ -1,0 +1,33 @@
+{
+  "files": [
+    ".gitignore",
+    "LICENSE",
+    "README.md",
+    "core/banner.py",
+    "core/commands.py",
+    "core/connect.py",
+    "core/cyberlab.py",
+    "core/desk.py",
+    "core/doctor.py",
+    "core/downloader.py",
+    "core/dungeon.py",
+    "core/dungeon_terminal.py",
+    "core/info.py",
+    "core/nexus.py",
+    "core/night.py",
+    "core/oracle.py",
+    "core/system.py",
+    "core/system_watch.py",
+    "core/typing_test.py",
+    "core/weather.py",
+    "core/workspace.py",
+    "dungeon/index.html",
+    "install.py",
+    "main.py",
+    "requirements.txt",
+    "ros_cli.py",
+    "ros_manifest.json",
+    "setcolor.py",
+    "setname.py"
+  ]
+}
