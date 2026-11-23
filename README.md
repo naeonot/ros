@@ -63,6 +63,24 @@ ros update install
 
 The updater asks for confirmation before installing unless explicitly passed `--yes`. It creates a timestamped backup of files it replaces. `pkg upgrade` updates Termux packages; `ros update` updates ROS project files.
 
+## Uninstall
+
+To remove ROS, run:
+
+```bash
+ros uninstall
+```
+
+The uninstaller always asks for confirmation. By default it removes the ROS program, launcher, local settings (including the ORACLE API key), Daily Desk data, download history, update backups and update cache. This deletion is permanent.
+
+To remove the program but retain personal ROS settings and data, run:
+
+```bash
+ros uninstall --keep-data
+```
+
+Both modes leave Termux, Python, curl and other Termux packages untouched. Review the confirmation prompt before proceeding.
+
 ## Data, privacy and security
 
 - ORACLE credentials and personal configuration are stored locally under `~/.config/rana-os/`; they are not included in this repository.
