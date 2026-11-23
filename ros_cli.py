@@ -14,8 +14,8 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-CONFIG = Path.home() / ".config/rana-os/config.json"
-MAIN = Path.home() / "rana-os/main.py"
+CONFIG = Path.home() / ".config/ran-os/config.json"
+MAIN = Path.home() / "ran-os/main.py"
 BASH = Path("/data/data/com.termux/files/usr/bin/bash")
 
 COLORS = [
@@ -44,14 +44,14 @@ def run_uninstall(raw_args=None):
         return 1
 
     home = Path.home()
-    app_dir = home / "rana-os"
-    config_dir = home / ".config" / "rana-os"
+    app_dir = home / "ran-os"
+    config_dir = home / ".config" / "ran-os"
     data_dirs = [
         home / ".local" / "share" / "ros-desk",
         home / ".local" / "share" / "ros-downloads",
     ]
-    update_backups = home / ".local" / "share" / "rana-os"
-    cache_dir = home / ".cache" / "rana-os"
+    update_backups = home / ".local" / "share" / "ran-os"
+    cache_dir = home / ".cache" / "ran-os"
     launcher = prefix / "bin" / "ros"
 
     print("\nROS UNINSTALL")
@@ -116,8 +116,8 @@ def show_version():
         version = "unknown"
     print(f"ROS version: {version}")
 
-UPDATE_DIR = Path.home() / ".cache" / "rana-os" / "updates"
-APP_DIR = Path.home() / "rana-os"
+UPDATE_DIR = Path.home() / ".cache" / "ran-os" / "updates"
+APP_DIR = Path.home() / "ran-os"
 
 
 def build_update_parser():
@@ -276,7 +276,7 @@ def _install_update(stage_path, sha):
     if not any(p.relative_to(stage_path).as_posix() == "ros_cli.py" for p in files):
         raise ValueError("Downloaded package is incomplete.")
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    backup_root = Path.home() / ".local" / "share" / "rana-os" / "update-backups" / stamp
+    backup_root = Path.home() / ".local" / "share" / "ran-os" / "update-backups" / stamp
     backup_root.mkdir(parents=True, exist_ok=False)
     changed = []
     try:
