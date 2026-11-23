@@ -16,6 +16,8 @@ pkg install curl python -y
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/naeonot/ros/main/install.sh)"
 ```
 
+After installation, ROS asks for an optional logo name. The name is rendered as ASCII art and saved only in that device's local configuration. Leave it blank to keep the default logo. The GitHub repository's default logo is never changed.
+
 Then launch:
 
 ```bash
