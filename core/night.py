@@ -4,7 +4,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 
-CONFIG = Path.home() / ".config/rana-os/config.json"
+CONFIG = Path.home() / ".config/ran-os/config.json"
 NEON = "#00ff9c"
 console = Console()
 
