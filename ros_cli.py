@@ -26,7 +26,12 @@ COLORS = [
 ]
 
 def show_version():
-    print("ROS version: development (release version not configured)")
+    version_file = Path(__file__).resolve().parent / "VERSION"
+    try:
+        version = version_file.read_text(encoding="utf-8").strip() or "unknown"
+    except OSError:
+        version = "unknown"
+    print(f"ROS version: {version}")
 
 UPDATE_DIR = Path.home() / ".cache" / "rana-os" / "updates"
 APP_DIR = Path.home() / "rana-os"
