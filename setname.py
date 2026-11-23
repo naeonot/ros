@@ -2,7 +2,7 @@ import json
 import sys
 from pathlib import Path
 
-config = Path.home() / ".config/rana-os/config.json"
+config = Path.home() / ".config/ran-os/config.json"
 
 if len(sys.argv) != 2:
     print("Usage: python setname.py NAME")
