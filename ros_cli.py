@@ -25,6 +25,89 @@ COLORS = [
     ("Pink", "#ff77bb"), ("Green", "#22cc88"), ("Sky Blue", "#55ccff"),
 ]
 
+def run_uninstall(raw_args=None):
+    """Remove ROS itself, optionally retaining user configuration and data."""
+    parser = argparse.ArgumentParser(
+        prog="ros uninstall",
+        description="Remove ROS from Termux. Termux and shared packages are not removed.",
+    )
+    parser.add_argument(
+        "--keep-data",
+        action="store_true",
+        help="keep ROS settings, ORACLE credentials, tasks, notes and download history",
+    )
+    parsed = parser.parse_args(list(raw_args or []))
+
+    prefix = Path(os.environ.get("PREFIX", ""))
+    if "com.termux" not in str(prefix) or prefix.name != "usr":
+        print("Uninstall is supported only inside Termux. Nothing was removed.")
+        return 1
+
+    home = Path.home()
+    app_dir = home / "rana-os"
+    config_dir = home / ".config" / "rana-os"
+    data_dirs = [
+        home / ".local" / "share" / "ros-desk",
+        home / ".local" / "share" / "ros-downloads",
+    ]
+    update_backups = home / ".local" / "share" / "rana-os"
+    cache_dir = home / ".cache" / "rana-os"
+    launcher = prefix / "bin" / "ros"
+
+    print("\nROS UNINSTALL")
+    print("This removes the ROS application and its command launcher.")
+    if parsed.keep_data:
+        print("Personal ROS configuration and data will be kept.")
+    else:
+        print("WARNING: ROS settings, ORACLE credentials, tasks, notes and download history will also be deleted.")
+    print("Termux, Python, curl and other Termux packages will NOT be removed.")
+
+    try:
+        answer = input("\nContinue with ROS uninstall? [y/N]: ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        print("\nUninstall cancelled. Nothing was removed.")
+        return 1
+    if answer not in ("y", "yes"):
+        print("Uninstall cancelled. Nothing was removed.")
+        return 1
+
+    def remove_path(path):
+        # Never follow a symlink while deleting a ROS-managed path.
+        if path.is_symlink() or path.is_file():
+            path.unlink(missing_ok=True)
+        elif path.is_dir():
+            shutil.rmtree(path)
+
+    try:
+        remove_path(launcher)
+        remove_path(app_dir)
+        remove_path(cache_dir)
+        if parsed.keep_data:
+            remove_path(update_backups / "update-backups")
+            try:
+                update_backups.rmdir()
+            except OSError:
+                pass
+        else:
+            remove_path(config_dir)
+            for path in data_dirs:
+                remove_path(path)
+            remove_path(update_backups)
+    except OSError as exc:
+        print(f"Uninstall stopped because a file could not be removed: {exc}")
+        print("Some ROS files may remain. You can run 'ros uninstall' again.")
+        return 1
+
+    print("\nROS has been uninstalled.")
+    if parsed.keep_data:
+        print("Your ROS configuration and personal data were kept.")
+    else:
+        print("ROS configuration and personal data were removed.")
+    print("Termux and its other packages were left untouched.")
+    print("To install ROS again, use the install command in the GitHub README.")
+    return 0
+
+
 def show_version():
     version_file = Path(__file__).resolve().parent / "VERSION"
     try:
@@ -399,6 +482,8 @@ def show_help():
     print("  ros update --check    Standard check option")
     print("  ros update -c         Short check option")
     print("  ros update help       Show updater help")
+    print("  ros uninstall         Remove ROS and its local data (asks first)")
+    print("  ros uninstall --keep-data  Remove ROS but keep personal data")
     print("  ros update --help     Show updater help")
     print("  ros new        Ask to open ROS in a new terminal workspace")
     print("  ros theme      Open the inline theme picker")
@@ -707,7 +792,7 @@ def main():
         "help", "version", "list", "about", "doctor", "info", "update", "new",
         "theme", "night", "lab", "matrix", "watch", "monitor", "desk", "nexus",
         "main", "config", "fire", "dungeon", "tt", "typing", "connect", "chat", "oracle", "ai",
-        "weather", "forecast", "download", "core",
+        "weather", "forecast", "download", "core", "uninstall",
     )
     if parsed.command.lower() not in known_commands:
         corrected = suggest_command(parsed.command, known_commands)
@@ -717,6 +802,11 @@ def main():
             return
         parsed.command = corrected
 
+    if parsed.command.lower() == "uninstall":
+        exit_code = run_uninstall(parsed.command_args)
+        if exit_code:
+            raise SystemExit(exit_code)
+        return
     if parsed.command.lower() == "core":
         from core.workspace import run as run_core
         exit_code = run_core(parsed.command_args)
