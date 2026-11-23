@@ -46,5 +46,3 @@ def show_banner():
             expand=True
         )
     )
-
-[executed on device: localhost (34059f63-7af7-4f50-89c5-e6d1ecbd6567)]
