@@ -29,6 +29,7 @@
     "ros_cli.py",
     "ros_manifest.json",
     "setcolor.py",
-    "setname.py"
+    "setname.py",
+    "VERSION"
   ]
 }
