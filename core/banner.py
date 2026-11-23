@@ -22,22 +22,14 @@ def show_banner():
     display_text = settings.get("main_text", "PERSONAL TERMINAL ENVIRONMENT")
     width = console.size.width
 
-    art = r"""
-    ██████╗  █████╗ ███╗   ██╗ █████╗
-    ██╔══██╗██╔══██╗████╗  ██║██╔══██╗
-    ██████╔╝███████║██╔██╗ ██║███████║
-    ██╔══██║██╔══██║██║╚██╗██║██╔══██║
-    ██║  ██║██║  ██║██║ ╚████║██║  ██║
-    ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
-    """
-
-    custom_logo = settings.get("main_logo")
-    if custom_logo:
-        try:
-            from pyfiglet import Figlet
-            art = "\n" + Figlet(font="ansi_shadow", width=120).renderText(custom_logo).rstrip("\n")
-        except ImportError:
-            art = custom_logo.upper()
+    # A manual logo override wins; otherwise use the install-time choice.
+    # Fresh installs and older configs without either key default to RAN-OS.
+    custom_logo = settings.get("main_logo") or settings.get("install_logo") or "RAN-OS"
+    try:
+        from pyfiglet import Figlet
+        art = "\n" + Figlet(font="ansi_shadow", width=120).renderText(custom_logo).rstrip("\n")
+    except ImportError:
+        art = custom_logo.upper()
 
     if width < 54:
         content = Align.center(Text(display_name, style=f"bold {color}"))
@@ -54,3 +46,5 @@ def show_banner():
             expand=True
         )
     )
+
+[executed on device: localhost (34059f63-7af7-4f50-89c5-e6d1ecbd6567)]
