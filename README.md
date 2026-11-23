@@ -24,7 +24,7 @@ Then launch:
 ros
 ```
 
-The bootstrap installer checks the latest GitHub commit, downloads that exact repository archive, validates archive paths and size, then runs the Python installer. It installs ROS into `~/rana-os`, creates the `ros` launcher, and configures the update source.
+The bootstrap installer checks the latest GitHub commit, downloads that exact repository archive, validates archive paths and size, then runs the Python installer. It installs ROS into `~/ran-os`, creates the `ros` launcher, and configures the update source.
 
 Review [install.sh](install.sh) and [install.py](install.py) before executing them if you want to inspect the installation process.
 
@@ -85,7 +85,7 @@ Both modes leave Termux, Python, curl and other Termux packages untouched. Revie
 
 ## Data, privacy and security
 
-- ORACLE credentials and personal configuration are stored locally under `~/.config/rana-os/`; they are not included in this repository.
+- ORACLE credentials and personal configuration are stored locally under `~/.config/ran-os/`; they are not included in this repository.
 - Daily Desk data and download history are stored locally under `~/.local/share/`.
 - Back up those directories separately if you want to preserve settings and personal data across a Termux reset.
 - Never commit API keys, passwords, tokens, private files or personal data.
