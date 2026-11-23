@@ -3,7 +3,6 @@ set -eu
 
 REPO="naeonot/ros"
 BRANCH="main"
-ARCHIVE_URL="https://github.com/${REPO}/archive/refs/heads/${BRANCH}.zip"
 API_URL="https://api.github.com/repos/${REPO}/commits/${BRANCH}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT INT TERM
@@ -23,7 +22,7 @@ if ! command -v curl >/dev/null 2>&1; then
 fi
 
 echo "Checking latest ROS revision..."
-ROS_INSTALL_COMMIT="$(curl -fsSL --retry 3 "$API_URL" | python -c 'import json,sys; print(json.load(sys.stdin)["sha"])')"
+ROS_INSTALL_COMMIT="$(curl -fsSL --retry 3 -H 'Cache-Control: no-cache' "$API_URL?nocache=$(date +%s)" | python -c 'import json,sys; print(json.load(sys.stdin)["sha"])')"
 case "$ROS_INSTALL_COMMIT" in
   *[!0-9a-fA-F]*|"") echo "ERROR: GitHub returned an invalid commit ID."; exit 1 ;;
 esac
@@ -32,7 +31,8 @@ if [ "${#ROS_INSTALL_COMMIT}" -ne 40 ]; then
   exit 1
 fi
 
-echo "Downloading ROS from GitHub..."
+ARCHIVE_URL="https://api.github.com/repos/${REPO}/zipball/${ROS_INSTALL_COMMIT}"
+echo "Downloading ROS commit ${ROS_INSTALL_COMMIT:0:7}..."
 curl -fL --retry 3 --connect-timeout 20 "$ARCHIVE_URL" -o "$WORK/ros.zip"
 
 echo "Extracting and validating package..."
