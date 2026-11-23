@@ -1,0 +1,52 @@
+name: ROS checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syntax-and-package:
+    name: Python ${{ matrix.python-version }} checks
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Compile Python files
+        run: python -m compileall -q .
+
+      - name: Validate JSON and install manifest
+        run: |
+          python -m json.tool ros_manifest.json >/dev/null
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path.cwd()
+          manifest = json.loads((root / "ros_manifest.json").read_text())
+          files = manifest.get("files")
+          if not isinstance(files, list) or not files:
+              raise SystemExit("ros_manifest.json must contain a non-empty files list")
+          missing = [name for name in files if not (root / name).is_file()]
+          if missing:
+              raise SystemExit("Missing manifest files: " + ", ".join(missing))
+          print(f"Validated {len(files)} manifest files")
+          PY
+
+      - name: Check bootstrap shell syntax
+        run: bash -n install.sh
