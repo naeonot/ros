@@ -10,7 +10,7 @@ from core.banner import show_banner
 from core.system import get_system_info
 
 console = Console()
-CONFIG = Path.home() / ".config/rana-os/config.json"
+CONFIG = Path.home() / ".config/ran-os/config.json"
 
 def get_color():
     try:
