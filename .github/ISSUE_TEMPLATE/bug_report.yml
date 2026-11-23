@@ -1,0 +1,65 @@
+name: Bug report
+description: Report a reproducible problem in ROS.
+title: "[Bug]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include API keys, passwords, tokens, personal data or private files."
+  - type: input
+    id: ros-version
+    attributes:
+      label: ROS version or commit
+      placeholder: "0.1.0-dev / commit SHA"
+    validations:
+      required: true
+  - type: input
+    id: android-version
+    attributes:
+      label: Android version
+      placeholder: "e.g. Android 14"
+    validations:
+      required: true
+  - type: input
+    id: termux-source
+    attributes:
+      label: Termux source
+      placeholder: "e.g. F-Droid or GitHub"
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      placeholder: "Output of python --version"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact commands and steps.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour and error output
+      description: Remove secrets and personal information before posting.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I removed API keys, tokens and personal information.
+          required: true
