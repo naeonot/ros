@@ -2,6 +2,7 @@
 """Install the complete ROS project into ~/rana-os on Termux."""
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -16,6 +17,20 @@ CONFIG_FILE = CONFIG_DIR / "config.json"
 REPOSITORY = "https://github.com/naeonot/ros"
 
 
+def installed_revision():
+    revision = os.environ.get("ROS_INSTALL_COMMIT", "").strip()
+    if not re.fullmatch(r"[0-9a-fA-F]{40}", revision):
+        try:
+            result = subprocess.run(
+                ["git", "-C", str(SOURCE), "rev-parse", "HEAD"],
+                check=True, capture_output=True, text=True,
+            )
+            revision = result.stdout.strip()
+        except (OSError, subprocess.CalledProcessError):
+            revision = ""
+    return revision if re.fullmatch(r"[0-9a-fA-F]{40}", revision) else ""
+
+
 def configure_updates():
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     try:
@@ -24,7 +39,12 @@ def configure_updates():
             raise ValueError("ROS config must be a JSON object")
     except FileNotFoundError:
         config = {}
+
     config.setdefault("update_repo", REPOSITORY)
+    revision = installed_revision()
+    if revision:
+        config["installed_commit"] = revision.lower()
+
     temporary = CONFIG_FILE.with_suffix(".json.tmp")
     temporary.write_text(
         json.dumps(config, indent=2) + "\n",
