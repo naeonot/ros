@@ -7,7 +7,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-CONFIG_DIR = Path.home() / ".config/rana-os"
+CONFIG_DIR = Path.home() / ".config/ran-os"
 ORACLE_CONFIG = CONFIG_DIR / "oracle.json"
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
 DEFAULT_MODEL = "openai/gpt-oss-120b"
