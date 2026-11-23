@@ -18,7 +18,9 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/naeonot/ros/main/install
 
 After installation, ROS asks for an optional logo name. The name is rendered as ASCII art and saved only in that device's local configuration. Leave it blank to keep the default logo. The GitHub repository's default logo is never changed.
 
-Then launch:
+After installation, each new interactive Termux session displays the local RAN-OS ASCII logo and the system-information dashboard, then returns to the normal Termux shell prompt. It does not automatically open the ROS command menu; run `ros` whenever you want to launch ROS manually.
+
+Then launch ROS manually:
 
 ```bash
 ros
@@ -81,7 +83,7 @@ To remove the program but retain personal ROS settings and data, run:
 ros uninstall --keep-data
 ```
 
-Both modes leave Termux, Python, curl and other Termux packages untouched. Review the confirmation prompt before proceeding.
+Both modes leave Termux, Python, curl and other Termux packages untouched. The uninstaller also removes the ROS-managed shell-startup display hook; it removes `.hushlogin` only if ROS created that file. Review the confirmation prompt before proceeding.
 
 ## Data, privacy and security
 
@@ -112,3 +114,5 @@ Pull requests are welcome, but compatibility claims should include actual test e
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+[executed on device: localhost (34059f63-7af7-4f50-89c5-e6d1ecbd6567)]
