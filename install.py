@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install the complete ROS project into ~/rana-os on Termux."""
+"""Install the complete ROS project into ~/ran-os on Termux."""
 import json
 import os
 import re
@@ -9,10 +9,10 @@ import sys
 from pathlib import Path
 
 SOURCE = Path(__file__).resolve().parent
-APP = Path.home() / "rana-os"
+APP = Path.home() / "ran-os"
 PREFIX = Path(os.environ.get("PREFIX", "/data/data/com.termux/files/usr"))
 BIN = PREFIX / "bin"
-CONFIG_DIR = Path.home() / ".config" / "rana-os"
+CONFIG_DIR = Path.home() / ".config" / "ran-os"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 REPOSITORY = "https://github.com/naeonot/ros"
 
@@ -101,10 +101,39 @@ def personalize_logo():
     print(f"Personal ASCII-art logo saved locally: {name.upper()}")
 
 
+def migrate_legacy_paths():
+    """Move earlier rana-os storage paths to the current ran-os names."""
+    pairs = (
+        (Path.home() / "rana-os", APP),
+        (Path.home() / ".config" / "rana-os", CONFIG_DIR),
+        (Path.home() / ".cache" / "rana-os", Path.home() / ".cache" / "ran-os"),
+        (Path.home() / ".local" / "share" / "rana-os", Path.home() / ".local" / "share" / "ran-os"),
+    )
+    for legacy, current in pairs:
+        if not legacy.exists() or legacy.is_symlink():
+            continue
+        if not current.exists():
+            current.parent.mkdir(parents=True, exist_ok=True)
+            legacy.rename(current)
+            print(f"Migrated: {legacy.name} -> {current.name}")
+            continue
+        if legacy.is_dir() and current.is_dir():
+            for item in legacy.iterdir():
+                destination = current / item.name
+                if not destination.exists():
+                    shutil.move(str(item), str(destination))
+            try:
+                legacy.rmdir()
+            except OSError:
+                print(f"Note: some older files remain in {legacy}")
+
+
 def main():
     if "com.termux" not in str(PREFIX):
         print("This installer is designed for Termux.")
         return 1
+
+    migrate_legacy_paths()
 
     subprocess.check_call([
         sys.executable, "-m", "pip", "install", "-r",
