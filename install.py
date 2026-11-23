@@ -92,7 +92,7 @@ def personalize_logo():
     config["main_logo"] = name.upper()
     temporary = CONFIG_FILE.with_suffix(".json.tmp")
     temporary.write_text(
-        json.dumps(config, indent=2, ensure_ascii=False) + "\\n",
+        json.dumps(config, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
     temporary.chmod(0o600)
