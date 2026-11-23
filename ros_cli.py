@@ -49,6 +49,7 @@ def build_update_parser():
         help="check, download or install a ROS update"
     )
     parser.add_argument("-c", "--check", action="store_true", help="check update source")
+    parser.add_argument("-y", "--yes", action="store_true", help="confirm installation without an interactive prompt")
     return parser
 
 
@@ -249,13 +250,14 @@ def run_update(args=None):
                 print("\nNo matching downloaded package found.")
                 print("Run 'ros update download' first.")
                 return
-            if not sys.stdin.isatty():
-                print("\nInstall requires an interactive confirmation.")
-                return
-            answer = input("\nInstall this update now? Existing files will be backed up. [y/N]: ").strip().lower()
-            if answer not in ("y", "yes"):
-                print("Installation cancelled. No project files changed.")
-                return
+            if not parsed.yes:
+                if not sys.stdin.isatty():
+                    print("\nInstall requires confirmation. Run: ros update install --yes")
+                    return
+                answer = input("\nInstall this update now? Existing files will be backed up. [y/N]: ").strip().lower()
+                if answer not in ("y", "yes"):
+                    print("Installation cancelled. No project files changed.")
+                    return
             _install_update(stage_path, sha)
     except urllib.error.HTTPError as exc:
         print(f"GitHub request failed: HTTP {exc.code}")
@@ -386,6 +388,7 @@ def show_help():
     print("  ros update            Check for ROS updates")
     print("  ros update download   Download the latest ROS package")
     print("  ros update install    Install a downloaded update (asks first)")
+    print("  ros update install -y  Confirm installation without a prompt")
     print("  ros update check      Legacy check command")
     print("  ros update --check    Standard check option")
     print("  ros update -c         Short check option")
