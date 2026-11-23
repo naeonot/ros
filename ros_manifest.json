@@ -23,6 +23,7 @@
     "core/workspace.py",
     "dungeon/index.html",
     "install.py",
+    "install.sh",
     "main.py",
     "requirements.txt",
     "ros_cli.py",
