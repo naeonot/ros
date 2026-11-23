@@ -4,6 +4,7 @@ set -eu
 REPO="naeonot/ros"
 BRANCH="main"
 ARCHIVE_URL="https://github.com/${REPO}/archive/refs/heads/${BRANCH}.zip"
+API_URL="https://api.github.com/repos/${REPO}/commits/${BRANCH}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT INT TERM
 
@@ -19,6 +20,16 @@ fi
 if ! command -v curl >/dev/null 2>&1; then
   echo "Installing curl..."
   pkg install curl -y
+fi
+
+echo "Checking latest ROS revision..."
+ROS_INSTALL_COMMIT="$(curl -fsSL --retry 3 "$API_URL" | python -c 'import json,sys; print(json.load(sys.stdin)["sha"])')"
+case "$ROS_INSTALL_COMMIT" in
+  *[!0-9a-fA-F]*|"") echo "ERROR: GitHub returned an invalid commit ID."; exit 1 ;;
+esac
+if [ "${#ROS_INSTALL_COMMIT}" -ne 40 ]; then
+  echo "ERROR: GitHub returned an invalid commit ID."
+  exit 1
 fi
 
 echo "Downloading ROS from GitHub..."
@@ -61,6 +72,6 @@ if [ ! -f "$SOURCE_DIR/install.py" ] || [ ! -f "$SOURCE_DIR/ros_manifest.json" ]
 fi
 
 echo "Running ROS installer..."
-python "$SOURCE_DIR/install.py"
+ROS_INSTALL_COMMIT="$ROS_INSTALL_COMMIT" python "$SOURCE_DIR/install.py"
 echo
 echo "ROS setup complete. Start it with: ros"
