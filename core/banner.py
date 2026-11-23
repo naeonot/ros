@@ -7,7 +7,7 @@ from rich.align import Align
 from rich.text import Text
 
 console = Console()
-CONFIG = Path.home() / ".config/rana-os/config.json"
+CONFIG = Path.home() / ".config/ran-os/config.json"
 
 def get_settings():
     try:
